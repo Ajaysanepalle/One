@@ -23,8 +23,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Store for admin credentials (default admin)
-DEFAULT_ADMIN = {"username": "admin", "password": "admin123"}
+# Store for admin credentials (default admin). Read from environment if provided.
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
+DEFAULT_ADMIN = {"username": ADMIN_USERNAME, "password": ADMIN_PASSWORD}
 DEFAULT_ADMIN_HASH = hash_password(DEFAULT_ADMIN["password"])
 
 # Helper function to track user visits
