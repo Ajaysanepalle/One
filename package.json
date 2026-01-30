@@ -1,0 +1,14 @@
+{
+  "name": "job-portal",
+  "version": "1.0.0",
+  "description": "A modern job posting website built with FastAPI and vanilla JavaScript",
+  "main": "backend/main.py",
+  "scripts": {
+    "dev-backend": "cd backend && python main.py",
+    "dev-frontend": "cd frontend && python -m http.server 8080",
+    "install": "cd backend && pip install -r requirements.txt"
+  },
+  "keywords": ["job", "portal", "fastapi", "python"],
+  "author": "Ajaysanepalle",
+  "license": "MIT"
+}

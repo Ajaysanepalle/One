@@ -1,0 +1,17 @@
+<!--
+  Netlify Configuration for Deploying Frontend on Netlify
+  and Backend on Render/Railway
+-->
+
+[build]
+  command = "echo 'Frontend ready - no build needed'"
+  publish = "frontend"
+
+[dev]
+  command = "cd frontend && python -m http.server 8080"
+  port = 8080
+
+[[redirects]]
+  from = "/api/*"
+  to = "https://your-backend-url/api/:splat"
+  status = 200

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Portal - Find Your Dream Job</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-briefcase"></i>
+                <span>ManaWorks Job Portal</span>
+            </div>
+            <div class="nav-buttons">
+                <button id="adminLoginBtn" class="btn btn-primary">Admin Login</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Admin Login Modal -->
+    <div id="adminModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Admin Login</h2>
+            <form id="adminLoginForm">
+                <div class="form-group">
+                    <label for="adminUsername">Username</label>
+                    <input type="text" id="adminUsername" placeholder="Enter username" required>
+                </div>
+                <div class="form-group">
+                    <label for="adminPassword">Password</label>
+                    <input type="password" id="adminPassword" placeholder="Enter password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard Modal -->
+    <div id="adminDashboard" class="modal">
+        <div class="modal-content admin-dashboard">
+            <span class="close">&times;</span>
+            <h2>Admin Dashboard</h2>
+            
+            <div class="admin-tabs">
+                <button class="tab-btn active" data-tab="add-job">Add Job</button>
+                <button class="tab-btn" data-tab="manage-jobs">Manage Jobs</button>
+                <button class="tab-btn" data-tab="stats">Statistics</button>
+                <button class="tab-btn logout-btn" id="logoutBtn">Logout</button>
+            </div>
+
+            <!-- Add Job Tab -->
+            <div id="add-job" class="tab-content active">
+                <h3>Post a New Job</h3>
+                <form id="jobForm">
+                    <div class="form-group">
+                        <label for="jobName">Job Name</label>
+                        <input type="text" id="jobName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="company">Company</label>
+                        <input type="text" id="company" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="jobDescription">Job Description</label>
+                        <textarea id="jobDescription" rows="4" required></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="eligibleYears">Eligible Years</label>
+                            <input type="text" id="eligibleYears" placeholder="e.g., 0-2, 2-5, 5+" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="qualification">Qualification</label>
+                            <input type="text" id="qualification" placeholder="e.g., B.Tech, B.Sc" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="link">Application Link</label>
+                            <input type="url" id="link" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="location">Location</label>
+                            <input type="text" id="location" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastDate">Last Date to Apply</label>
+                        <input type="date" id="lastDate" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Post Job</button>
+                </form>
+            </div>
+
+            <!-- Manage Jobs Tab -->
+            <div id="manage-jobs" class="tab-content">
+                <h3>Your Job Postings</h3>
+                <div id="adminJobsList"></div>
+            </div>
+
+            <!-- Statistics Tab -->
+            <div id="stats" class="tab-content">
+                <h3>Website Statistics</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h4>Total Visits</h4>
+                        <p id="totalVisits" class="stat-value">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Unique Visitors</h4>
+                        <p id="uniqueVisitors" class="stat-value">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Total Jobs Posted</h4>
+                        <p id="totalJobs" class="stat-value">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Find Your Perfect Job</h1>
+                <p>Discover amazing career opportunities in top companies</p>
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="Search by job title, company...">
+                    <button id="searchBtn" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filter Section -->
+        <section class="filters-section">
+            <div class="filter-group">
+                <label for="yearsFilter">Experience Level</label>
+                <select id="yearsFilter">
+                    <option value="">All Years</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="locationFilter">Location</label>
+                <select id="locationFilter">
+                    <option value="">All Locations</option>
+                </select>
+            </div>
+            <button id="resetFilters" class="btn btn-secondary">Reset Filters</button>
+        </section>
+
+        <!-- Jobs Display Tabs -->
+        <section class="jobs-section">
+            <div class="jobs-tabs">
+                <button class="job-tab-btn active" data-tab="all-jobs">All Jobs</button>
+                <span id="yearsTabsContainer"></span>
+            </div>
+
+            <!-- Jobs Grid -->
+            <div id="jobsList" class="jobs-grid">
+                <div class="loading">Loading jobs...</div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Job Details Modal -->
+    <div id="jobModal" class="modal">
+        <div class="modal-content job-details">
+            <span class="close">&times;</span>
+            <div id="jobDetails"></div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2026 ManaWorks Job Portal. All rights reserved.</p>
+        <p>Made with <i class="fas fa-heart"></i> by Ajaysanepalle</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
