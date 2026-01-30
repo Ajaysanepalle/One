@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8000/api";
+const API_BASE = "https://one-gy8u.onrender.com/api";
 
 let currentAdminToken = localStorage.getItem("adminToken");
 let allJobs = [];
