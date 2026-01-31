@@ -235,7 +235,8 @@ async function editJob(jobId) {
     }
     
     try {
-        const response = await fetch(`${API_BASE}/jobs/${jobId}?token=${currentAdminToken}`);
+        showLoading(true);
+        const response = await fetch(`${API_BASE}/jobs/${jobId}`);
         const job = await response.json();
         
         // Populate form with job data
@@ -248,10 +249,16 @@ async function editJob(jobId) {
         document.getElementById("location").value = job.location;
         document.getElementById("lastDate").value = job.last_date;
         
+        // Store the current job ID for update
+        window.editingJobId = jobId;
+        
         // Change form submission to update instead of create
         const jobForm = document.getElementById("jobForm");
+        const originalOnSubmit = jobForm.onsubmit;
+        
         jobForm.onsubmit = async (e) => {
             e.preventDefault();
+            showLoading(true);
             
             const jobData = {
                 job_name: document.getElementById("jobName").value,
@@ -265,7 +272,7 @@ async function editJob(jobId) {
             };
             
             try {
-                const updateResponse = await fetch(`${API_BASE}/jobs/${jobId}?token=${currentAdminToken}`, {
+                const updateResponse = await fetch(`${API_BASE}/jobs/${window.editingJobId}?token=${currentAdminToken}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(jobData)
@@ -273,18 +280,20 @@ async function editJob(jobId) {
                 
                 if (updateResponse.ok) {
                     jobForm.reset();
-                    jobForm.onsubmit = null; // Reset to default
+                    jobForm.onsubmit = originalOnSubmit; // Restore original
+                    window.editingJobId = null;
                     showAlert("Job updated successfully!", "success");
                     apiCache.clear(); // Clear cache
                     loadAdminJobs();
                     loadJobs();
                     loadFilters();
+                    showLoading(false);
                 } else {
                     showAlert("Failed to update job", "error");
+                    showLoading(false);
                 }
             } catch (error) {
                 showAlert("Error: " + error.message, "error");
-            } finally {
                 showLoading(false);
             }
         };
