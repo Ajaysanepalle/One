@@ -149,7 +149,8 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
 });
 
 // ============= JOB FORM SUBMISSION =============
-document.getElementById("jobForm").addEventListener("submit", async (e) => {
+// Store original form handler
+const originalFormHandler = async (e) => {
     e.preventDefault();
     showLoading(true);
     
@@ -181,6 +182,7 @@ document.getElementById("jobForm").addEventListener("submit", async (e) => {
             document.getElementById("jobForm").reset();
             showAlert("Job posted successfully!", "success");
             apiCache.clear(); // Clear cache
+            loadAdminJobs();
             loadJobs();
             loadFilters();
         } else {
@@ -191,7 +193,9 @@ document.getElementById("jobForm").addEventListener("submit", async (e) => {
     } finally {
         showLoading(false);
     }
-});
+};
+
+document.getElementById("jobForm").addEventListener("submit", originalFormHandler);
 
 // ============= LOAD ADMIN JOBS =============
 async function loadAdminJobs() {
@@ -254,7 +258,6 @@ async function editJob(jobId) {
         
         // Change form submission to update instead of create
         const jobForm = document.getElementById("jobForm");
-        const originalOnSubmit = jobForm.onsubmit;
         
         jobForm.onsubmit = async (e) => {
             e.preventDefault();
@@ -280,7 +283,7 @@ async function editJob(jobId) {
                 
                 if (updateResponse.ok) {
                     jobForm.reset();
-                    jobForm.onsubmit = originalOnSubmit; // Restore original
+                    jobForm.onsubmit = originalFormHandler; // Restore original
                     window.editingJobId = null;
                     showAlert("Job updated successfully!", "success");
                     apiCache.clear(); // Clear cache
