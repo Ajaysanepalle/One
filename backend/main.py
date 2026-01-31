@@ -8,6 +8,8 @@ import schemas
 from database import engine, get_db
 from auth import hash_password, verify_password, create_access_token, verify_token
 import os
+from functools import lru_cache
+from datetime import datetime, timedelta
 
 # Create tables
 models.Base.metadata.create_all(bind=engine)
@@ -23,19 +25,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Add GZip middleware for compression
+from fastapi.middleware.gzip import GZipMiddleware
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
 # Store for admin credentials (default admin). Read from environment if provided.
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
 DEFAULT_ADMIN = {"username": ADMIN_USERNAME, "password": ADMIN_PASSWORD}
 DEFAULT_ADMIN_HASH = hash_password(DEFAULT_ADMIN["password"])
 
-# Helper function to track user visits
+# Helper function to track user visits (async to avoid blocking)
 def track_visit(request: Request, db: Session, job_id: int = None):
-    ip = request.client.host if request.client else "unknown"
-    user_agent = request.headers.get("user-agent", "unknown")
-    visit = models.UserVisit(ip_address=ip, user_agent=user_agent, job_id=job_id)
-    db.add(visit)
-    db.commit()
+    try:
+        ip = request.client.host if request.client else "unknown"
+        user_agent = request.headers.get("user-agent", "unknown")
+        visit = models.UserVisit(ip_address=ip, user_agent=user_agent, job_id=job_id)
+        db.add(visit)
+        db.commit()
+    except:
+        pass  # Don't block requests on visit tracking errors
 
 # Helper to get current admin
 def get_current_admin(token: str = None) -> int:
@@ -117,7 +126,10 @@ def create_job(job: schemas.JobCreate, token: str, db: Session = Depends(get_db)
 @app.get("/api/jobs", response_model=list[schemas.JobResponse])
 def get_all_jobs(request: Request, db: Session = Depends(get_db)):
     """Get all active job postings"""
-    track_visit(request, db)
+    try:
+        track_visit(request, db)
+    except:
+        pass
     
     jobs = db.query(models.Job).filter(
         models.Job.is_active == True
@@ -127,7 +139,10 @@ def get_all_jobs(request: Request, db: Session = Depends(get_db)):
 @app.get("/api/jobs/{job_id}", response_model=schemas.JobResponse)
 def get_job(job_id: int, request: Request, db: Session = Depends(get_db)):
     """Get a specific job posting"""
-    track_visit(request, db, job_id)
+    try:
+        track_visit(request, db, job_id)
+    except:
+        pass
     
     job = db.query(models.Job).filter(
         models.Job.id == job_id,
@@ -181,7 +196,10 @@ def delete_job(job_id: int, token: str, db: Session = Depends(get_db)):
 @app.get("/api/stats")
 def get_stats(request: Request, db: Session = Depends(get_db)):
     """Get website statistics"""
-    track_visit(request, db)
+    try:
+        track_visit(request, db)
+    except:
+        pass
     
     total_visits = db.query(func.count(models.UserVisit.id)).scalar()
     unique_visitors = db.query(func.count(func.distinct(models.UserVisit.ip_address))).scalar()
@@ -214,7 +232,10 @@ def search_jobs(
 ):
     """Search jobs by query, years, and location"""
     if request:
-        track_visit(request, db)
+        try:
+            track_visit(request, db)
+        except:
+            pass
     
     query = db.query(models.Job).filter(models.Job.is_active == True)
     
@@ -239,13 +260,14 @@ def search_jobs(
 def get_available_years(db: Session = Depends(get_db)):
     """Get all available experience years"""
     jobs = db.query(models.Job.eligible_years).filter(
-        models.Job.is_active == True
-    ).distinct().all()
+        models.Job.is_active == True,
+        models.Job.eligible_years.isnot(None)
+    ).all()
     
     years_set = set()
     for job in jobs:
         if job.eligible_years:
-            years_list = [y.strip() for y in job.eligible_years.split(",")]
+            years_list = [y.strip() for y in str(job.eligible_years).split(",")]
             years_set.update(years_list)
     
     return sorted(list(years_set))

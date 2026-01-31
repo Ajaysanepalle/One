@@ -22,12 +22,12 @@ class Job(Base):
     eligible_years = Column(String)  # e.g., "0-2, 2-5, 5+"
     qualification = Column(String)
     link = Column(String)
-    location = Column(String)
+    location = Column(String, index=True)
     last_date = Column(String)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
-    admin_id = Column(Integer)
-    is_active = Column(Boolean, default=True)
+    admin_id = Column(Integer, index=True)
+    is_active = Column(Boolean, default=True, index=True)
 
 class UserVisit(Base):
     __tablename__ = "user_visits"
