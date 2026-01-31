@@ -260,6 +260,12 @@ async function editJob(jobId) {
     try {
         showLoading(true);
         const response = await fetch(`${API_BASE}/jobs/${jobId}`);
+        
+        if (!response.ok) {
+            throw new Error(`Failed to load job: ${response.status}`);
+        }
+        
+        const job = await response.json();
         const job = await response.json();
         
         // Populate form with job data
@@ -337,19 +343,34 @@ async function deleteJob(jobId) {
     if (!confirm("Are you sure you want to delete this job?")) return;
     showLoading(true);
     
+    if (!currentAdminToken) {
+        showAlert("Session expired. Please login again", "error");
+        localStorage.removeItem("adminToken");
+        currentAdminToken = null;
+        showLoading(false);
+        return;
+    }
+    
     try {
         const response = await fetch(`${API_BASE}/jobs/${jobId}?token=${currentAdminToken}`, {
             method: "DELETE"
         });
+        
+        const responseData = await response.json().catch(() => ({}));
         
         if (response.ok) {
             showAlert("Job deleted successfully", "success");
             apiCache.clear(); // Clear cache
             loadAdminJobs();
             loadJobs();
+        } else {
+            const errorMsg = responseData.detail || "Failed to delete job";
+            showAlert(errorMsg, "error");
+            console.error("Delete error:", response.status, errorMsg);
         }
     } catch (error) {
         showAlert("Error deleting job: " + error.message, "error");
+        console.error("Delete error:", error);
     } finally {
         showLoading(false);
     }
