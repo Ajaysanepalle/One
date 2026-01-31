@@ -160,6 +160,20 @@ const originalFormHandler = async (e) => {
         return;
     }
     
+    // Verify token is still valid
+    try {
+        const verifyResponse = await fetch(`${API_BASE}/admin/verify?token=${currentAdminToken}`);
+        if (!verifyResponse.ok) {
+            showAlert("Session expired. Please login again", "error");
+            localStorage.removeItem("adminToken");
+            currentAdminToken = null;
+            showLoading(false);
+            return;
+        }
+    } catch (error) {
+        console.error("Token verification failed:", error);
+    }
+    
     const jobData = {
         job_name: document.getElementById("jobName").value,
         company: document.getElementById("company").value,
@@ -178,6 +192,8 @@ const originalFormHandler = async (e) => {
             body: JSON.stringify(jobData)
         });
         
+        const responseData = await response.json();
+        
         if (response.ok) {
             document.getElementById("jobForm").reset();
             showAlert("Job posted successfully!", "success");
@@ -186,10 +202,13 @@ const originalFormHandler = async (e) => {
             loadJobs();
             loadFilters();
         } else {
-            showAlert("Failed to post job", "error");
+            const errorMsg = responseData.detail || "Failed to post job";
+            showAlert(errorMsg, "error");
+            console.error("Job posting error:", errorMsg, responseData);
         }
     } catch (error) {
         showAlert("Error: " + error.message, "error");
+        console.error("Error posting job:", error);
     } finally {
         showLoading(false);
     }
